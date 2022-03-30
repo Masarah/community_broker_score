@@ -22,9 +22,9 @@ Format of edge and node files:
   
 *Each row in the edge dataframe represents a tie between two nodes 
 
-##  
+## Procedure
 
-  Install Package 
+Install Package 
   ```
   pip install -i https://test.pypi.org/simple/ Community-Broker-Score
   ```
