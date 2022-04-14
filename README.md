@@ -3,7 +3,7 @@
 The community broker score quantifies brokers reach and control at the meso level. It was developed in the paper: "A Robust Measure to Uncover Community Brokerage in Illicit Networks" and published in the Journal of Quantitative Criminology. 
 
 Local Community Broker Score: 
-> The *local community broker score* is calculated for each partition (also known as community structure) found through a community detection algorithm (in the paper, we used the Leiden algorithm). This local score quantifies, for each bridge created between two different communities, the bridge’s size (the number of people connected through the bridge), scope (how easily these people can be reached (i.e., cohesion) and exclusivity (whether other brokers connect these two communities).
+> The *local community broker score* is calculated for each partition (also known as community structure) found through a community detection algorithm (in the paper, we used the Leiden algorithm). This local score quantifies, for each bridge created between two different communities, the bridge’s size (the number of people connected through the bridge), efficiency (how easily these people can be reached (i.e., cohesion) and exclusivity (whether other brokers connect these two communities).
 
 Global Community Broker Score:
 > The *global community broker score* is an average of all local scores, making it robust to the inherent randomness of community partitioning. The averaged global score thus follows the partition distribution found when running the community detection algorithm thousands of times. This implies that a partition that emerges more often has more weight than an outlier partition (although the outlier partitions are still considered).
