@@ -2,7 +2,7 @@ from community_broker_score import (
     detect_brokering_edges,
     detect_community_brokers,
     find_community_characteristics,
-    local_community_broker_score
+    local_community_broker_score,
 )
 import pandas as pd
 
@@ -10,8 +10,8 @@ import pandas as pd
 def test_detect_brokering_edges_returns():
 
     #  We create 2 brokering edges, (1,2) and (5,1)
-    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5], "community_id": ["a", "b", "c", "c", "b"]})
-    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5], "B": [2, 5, 4, 3, 1]})
+    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5, 6], "community_id": ["a", "b", "c", "c", "b", "a"]})
+    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5, 1], "B": [2, 5, 4, 3, 1, 6]})
     result = detect_brokering_edges(nodes, edges)
 
     assert type(result) == pd.DataFrame
@@ -27,8 +27,8 @@ def test_detect_brokering_edges_returns():
 def test_detect_community_brokers_returns():
 
     #  We create 2 brokering edges, (1,2) and (5,1)
-    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5], "community_id": ["a", "b", "c", "c", "b"]})
-    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5], "B": [2, 5, 4, 3, 1]})
+    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5, 6], "community_id": ["a", "b", "c", "c", "b", "a"]})
+    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5, 1], "B": [2, 5, 4, 3, 1, 6]})
     result = detect_community_brokers(nodes, edges)
 
     assert type(result) == pd.DataFrame
@@ -40,8 +40,8 @@ def test_detect_community_brokers_returns():
 
 def test_find_community_characteristics_returns():
 
-    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5], "community_id": ["a", "b", "c", "c", "b"]})
-    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5], "B": [2, 5, 4, 3, 1]})
+    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5, 6], "community_id": ["a", "b", "c", "c", "b", "a"]})
+    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5, 1], "B": [2, 5, 4, 3, 1, 6]})
     result = find_community_characteristics(nodes, edges)
 
     assert type(result) == pd.DataFrame
@@ -50,28 +50,31 @@ def test_find_community_characteristics_returns():
     assert "community_n_people" in result.columns
     assert "community_n_brokers" in result.columns
 
-    assert result.iloc[0]["community_id"] == 'a'
-    assert result.iloc[0]["community_cohesion"] == 0
-    assert result.iloc[0]["community_n_people"] == 1
+    assert (result.community_n_people > 1).all()
+
+    assert result.iloc[0]["community_id"] == "a"
+    assert result.iloc[0]["community_cohesion"] == 1
+    assert result.iloc[0]["community_n_people"] == 2
     assert result.iloc[0]["community_n_brokers"] == 1
 
-    assert result.iloc[1]["community_id"] == 'b'
+    assert result.iloc[1]["community_id"] == "b"
     assert result.iloc[1]["community_cohesion"] == 1
     assert result.iloc[1]["community_n_people"] == 2
     assert result.iloc[1]["community_n_brokers"] == 2
 
-    assert result.iloc[2]["community_id"] == 'c'
+    assert result.iloc[2]["community_id"] == "c"
     assert result.iloc[2]["community_cohesion"] == 1
     assert result.iloc[2]["community_n_people"] == 2
     assert result.iloc[2]["community_n_brokers"] == 0
 
 
 def test_local_community_broker_score_returns():
-    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5], "community_id": ["a", "b", "c", "c", "b"]})
-    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5], "B": [2, 5, 4, 3, 1]})
+    nodes = pd.DataFrame({"id": [1, 2, 3, 4, 5, 6], "community_id": ["a", "b", "c", "c", "b", "a"]})
+    edges = pd.DataFrame({"A": [1, 2, 3, 4, 5, 1], "B": [2, 5, 4, 3, 1, 6]})
     result = local_community_broker_score(nodes, edges)
 
-    assert len(result) == 5
-    assert 'community_broker_score' in result.columns
+    assert len(result) == 6
+    assert "community_broker_score" in result.columns
     assert (result.community_broker_score >= 0).all()
     assert (result.community_broker_score <= len(result)).all()
+    assert False
