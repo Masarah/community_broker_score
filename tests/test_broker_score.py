@@ -77,4 +77,3 @@ def test_local_community_broker_score_returns():
     assert "community_broker_score" in result.columns
     assert (result.community_broker_score >= 0).all()
     assert (result.community_broker_score <= len(result)).all()
-    assert False
