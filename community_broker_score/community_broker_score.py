@@ -11,6 +11,14 @@ def determine_nodes_in_same_group(edges):
 
 
 def detect_brokering_edges(nodes, edges):
+    """This function detect edges of two nodes in different communities
+
+        Parameters:
+            - nodes : Dataframe with columns 'id' and 'community_id'
+            - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+
+        returns a dataframe with only brokering edges
+    """
 
     #  Get membership of A and membership of B for each pair of edges
     edges_A_with_cid = edges.merge(nodes, left_on="A", right_on="id", how="inner").drop(columns=["id"])
