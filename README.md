@@ -26,7 +26,7 @@ Format of edge and node files:
 
 Install Package
   ```
-  pip install -i https://test.pypi.org/simple/ Community-Broker-Score
+  pip install Community-Broker-Score==0.0.9
   ```
 
   Import package in environment:
