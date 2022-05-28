@@ -13,12 +13,12 @@ def determine_nodes_in_same_group(edges):
 def detect_brokering_edges(nodes, edges):
     """This function detects edges of two nodes in different communities
 
-        Parameters:
-            - nodes : Dataframe with columns 'id' and 'community_id'
-            - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+    Parameters:
+        - nodes : Dataframe with columns 'id' and 'community_id'
+        - edges : Dataframe with columns source 'A' and target 'B' (undirected)
 
-        Returns:
-            - edges_only_community_bridge : Dataframe with only brokering edges
+    Returns:
+        - edges_only_community_bridge : Dataframe with only brokering edges
     """
 
     #  Get membership of A and membership of B for each pair of edges
@@ -43,15 +43,17 @@ def detect_brokering_edges(nodes, edges):
 
 def detect_community_brokers(nodes, edges):
     """This function detects community brokers and counts the number of times they hold this position in the network
-    
-        Parameters:
-            - nodes : Dataframe with columns 'id' and 'community_id'
-            - edges : Dataframe with columns source 'A' and target 'B' (undirected)
 
-        Returns:
-            - nodes_with_characteristics : Node dataframe with two columns: 
-                    - community_broker column (0, 1)
-                    - n_community_broker (the number of times a community broker bridges two communities)
+    Parameters:
+        - nodes : Dataframe with columns 'id' and 'community_id'
+        - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+
+    Returns:
+        - nodes_with_characteristics : Node dataframe with two columns:
+            - id
+            - community_id
+            - community_broker: Boolean
+            - n_community_broker: Int. The number of times a community broker bridges two communities)
     """
 
     #  Find ties that are bridges between two communities
@@ -86,20 +88,19 @@ def detect_community_brokers(nodes, edges):
 
 
 def find_community_characteristics(nodes, edges):
-    
-     """This function calculates community characteristics required for the community broker score calculation
-    
-        Parameters:
-            - nodes : Dataframe with columns 'id' and 'community_id'
-            - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+    """This function calculates community characteristics required for the community broker score calculation
 
-        Returns:
-            - communities : Community dataframe with: 
-                    - community_id (id of the community)
-                    - community_cohesion (based on average_shortest_path_length)
-                    - community_n_brokers (number of community brokers in each community) 
+    Parameters:
+        - nodes : Dataframe with columns 'id' and 'community_id'
+        - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+
+    Returns:
+        - communities : Community dataframe with:
+            - community_id (id of the community)
+            - community_cohesion (integer representing average_shortest_path_length)
+            - community_n_people (integer number of people in the community)
+            - community_n_brokers (integer number of community brokers in each community)
     """
-
     nodes_with_characteristics = detect_community_brokers(nodes, edges)
     nodes_without_count_var = nodes_with_characteristics.drop(columns=["n_community_broker"])
 
@@ -144,19 +145,19 @@ def find_community_characteristics(nodes, edges):
 
 
 def local_community_broker_score(nodes, edges):
-     """This function calculates the community broker score for one network partition (thus the local community broker score)
-    
-        Parameters:
-            - nodes : Dataframe with columns 'id' and 'community_id'
-            - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+    """This function calculates the community broker score for one network partition (thus the local community broker score)
 
-        Returns:
-            - nodes_with_broker_score : Node dataframe with local community broker score 
-        
-        Note that the local community broker score is the score for one community structure. 
-        When the community-detection algorithm chosen yields different partitioning every time it is computed, to find the global score,
-        one has to calculate the average of local scores over multiples network partitioning.
-                 
+    Parameters:
+        - nodes : Dataframe with columns 'id' and 'community_id'
+        - edges : Dataframe with columns source 'A' and target 'B' (undirected)
+
+    Returns:
+        - nodes_with_broker_score : Node dataframe with local community broker score
+
+    Note that the local community broker score is the score for one community structure.
+    When the community-detection algorithm chosen yields different partitioning every time it is computed, to find the global score,
+    one has to calculate the average of local scores over multiples network partitioning.
+
     """
     #  Recompute each prior functions
     edges_only_community_bridge = detect_brokering_edges(nodes, edges)
