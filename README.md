@@ -8,7 +8,7 @@ Local Community Broker Score:
 Global Community Broker Score:
 > The *global community broker score* is an average of all local scores, making it robust to the inherent randomness of community partitioning. The averaged global score thus follows the partition distribution found when running the community detection algorithm thousands of times. This implies that a partition that emerges more often has more weight than an outlier partition (although the outlier partitions are still considered).
 
-This package allows one to calculate the *local community broker score* given a known partition. Info package: https://test.pypi.org/project/Community-Broker-Score/
+This package allows one to calculate the *local community broker score* given a known partition. Info package: https://pypi.org/project/Community-Broker-Score/0.0.9/
 
 Format of edge and node files:
 
