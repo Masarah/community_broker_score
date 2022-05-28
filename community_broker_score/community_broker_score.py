@@ -17,7 +17,8 @@ def detect_brokering_edges(nodes, edges):
             - nodes : Dataframe with columns 'id' and 'community_id'
             - edges : Dataframe with columns source 'A' and target 'B' (undirected)
 
-        returns a dataframe with only brokering edges
+        Returns:
+            - edges_only_community_bridge : Dataframe with only brokering edges
     """
 
     #  Get membership of A and membership of B for each pair of edges
