@@ -185,7 +185,7 @@ def local_community_broker_score(nodes, edges):
     ).drop_duplicates()
     all_broker_ties_unique_in_one_column = all_broker_ties[
         ["A", "community_id_A", "community_id_B", "community_broker"]
-    ].rename(columns={"A": "id"})
+    ].rename(columns={"A": "id"}).drop_duplicates()
 
     #  Detect cobridgers for based on community source (A) towards community target (B) for each broker tie
     n_CB_A_towards_B = (
