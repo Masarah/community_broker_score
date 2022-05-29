@@ -33,7 +33,7 @@ Install Package
 
   Import package in environment:
   ```
-  import community_broker_score as cb
+  from community_broker_score import community_broker_score as cb 
   ```
   Needed Python libraries :
   ```
