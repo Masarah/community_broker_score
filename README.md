@@ -24,9 +24,11 @@ Format of edge and node files:
 
 ## Procedure
 
+Package info: https://pypi.org/project/Community-Broker-Score/
+
 Install Package
   ```
-  pip install Community-Broker-Score==0.0.9
+  pip install Community-Broker-Score
   ```
 
   Import package in environment:
