@@ -15,11 +15,13 @@ This package allows one to calculate the *local community broker score* given a 
 
 Format of edge and node files:
 
-    A node dataframe with two mandatory columns:
+  Format of edge and node files:
+
+    A node dataframe with two mandatory ordered columns:
       - Column 1: id of each unique node
       - Column 2: id of the community in which each unique node belongs
 
-    An undirected edge dataframe in which each row in the edge dataframe represents a relationship (a tie or an edge) between two nodes.
+    An edge dataframe with the first two columns representing an undirected relationship (a tie or an edge or a pair) between two nodes.
 
 ## Procedure
 
