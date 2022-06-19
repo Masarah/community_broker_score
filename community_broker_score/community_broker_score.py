@@ -12,42 +12,42 @@ def determine_nodes_in_same_group(edges):
 
 def detect_brokering_edges(nodes, edges):
     """This function detects edges of two nodes in different communities.
-
     Parameters:
         - nodes : Dataframe with columns 'id' and 'community_id'.
-        - edges : Dataframe with columns source 'A' and target 'B', undirected.
-
+        - edges : Dataframe with columns source 'left' and target 'right', undirected.
     Returns:
         - edges_only_community_bridge : Dataframe with only brokering edges
     """
-
-    #  Get membership of A and membership of B for each pair of edges
-    edges_A_with_cid = edges.merge(nodes, left_on="A", right_on="id", how="inner").drop(columns=["id"])
+    #rename dataframe columns 
+    edges_for_calculation = edges.rename(columns={f'{edges.columns[0]}':'A', f'{edges.columns[1]}':'B'})
+    nodes_for_calculation = nodes.rename(columns={f'{nodes.columns[0]}':'id', f'{nodes.columns[1]}':'community_id'})
+    
+    # Get membership of A and membership of B for each pair of edges
+    edges_A_with_cid = edges_for_calculation.merge(nodes_for_calculation, left_on="A", right_on="id", how="inner").drop(columns=["id"])
     edges_A_with_cid_renamed = edges_A_with_cid.rename(columns={"community_id": "community_id_A"})
-    edges_B_with_cid = edges_A_with_cid_renamed.merge(nodes, left_on="B", right_on="id", how="inner").drop(
+    edges_B_with_cid = edges_A_with_cid_renamed.merge(nodes_for_calculation, left_on="B", right_on="id", how="inner").drop(
         columns=["id"]
     )
     edges_B_with_cid_renamed = edges_B_with_cid.rename(columns={"community_id": "community_id_B"})
 
-    #  Rename edge dataframe
+    # Rename edge dataframe
     edges_AB_with_cid = edges_B_with_cid_renamed
 
-    #  Determine if the edge is a bridging edge or not
+    # Determine if the edge is a bridging edge or not
     edges_AB_with_cid["community_broker"] = edges_AB_with_cid.apply(determine_nodes_in_same_group, axis=1)
 
-    #  Get all the community brokers (CB) from the pairs and tag them as community brokers (CB)
+    # Get all the community brokers (CB) from the pairs and tag them as community brokers (CB)
     edges_only_community_bridge = edges_AB_with_cid.loc[edges_AB_with_cid["community_broker"] == 1]
+    
 
     return edges_only_community_bridge
 
 
 def detect_community_brokers(nodes, edges):
     """This function detects community brokers and counts the number of times they hold this position in the network.
-
     Parameters:
         - nodes : Dataframe with columns 'id' and 'community_id'.
         - edges : Dataframe with columns source 'A' and target 'B', undirected.
-
     Returns:
         - nodes_with_characteristics : Node dataframe with 4 columns:
             - id
@@ -56,19 +56,23 @@ def detect_community_brokers(nodes, edges):
             - n_community_broker: Int. The number of times a community broker bridges two communities.
     """
 
-    #  Find ties that are bridges between two communities
+    # Rename dataframes columns
+    edges_for_calculation = edges.rename(columns={f'{edges.columns[0]}':'A', f'{edges.columns[1]}':'B'})
+    nodes_for_calculation = nodes.rename(columns={f'{nodes.columns[0]}':'id', f'{nodes.columns[1]}':'community_id'}) 
+    
+    # Find ties that are bridges between two communities
     edges_only_community_bridge = detect_brokering_edges(nodes, edges)
 
-    #  Get all the community brokers (CB) from the pairs and tag them as community brokers (CB)
+    # Get all the community brokers (CB) from the pairs and tag them as community brokers (CB)
     those_who_are_CB_in_A = edges_only_community_bridge[["A", "community_broker"]].rename(columns={"A": "id"})
     those_who_are_CB_in_B = edges_only_community_bridge[["B", "community_broker"]].rename(columns={"B": "id"})
     community_brokers_list = pd.concat([those_who_are_CB_in_A, those_who_are_CB_in_B]).drop_duplicates()
 
-    #  Merge community_brokers_list with nodes dataframe and fill empty rows with 0 (for non-CB)
-    nodes = nodes.merge(community_brokers_list, on="id", how="outer")
-    nodes["community_broker"] = nodes["community_broker"].fillna(0)
+    # Merge community_brokers_list with nodes dataframe and fill empty rows with 0 (for non-CB)
+    nodes_with_characteristics_with_broker_binary = nodes_for_calculation.merge(community_brokers_list, on="id", how="outer")
+    nodes_with_characteristics_with_broker_binary["community_broker"] = nodes_with_characteristics_with_broker_binary["community_broker"].fillna(0)
 
-    #  Same process as above but now groupby by count so as to have a count column (the number of time a CB is a CB)
+    # Same process as above but now groupby by count so as to have a count column (the number of time a CB is a CB)
     community_brokers_list_duplicates = pd.concat([those_who_are_CB_in_A, those_who_are_CB_in_B])
     community_brokers_list_count = (
         community_brokers_list_duplicates.groupby("id")
@@ -77,8 +81,8 @@ def detect_community_brokers(nodes, edges):
         .rename(columns={"community_broker": "n_community_broker"})
     )
 
-    #  Merge community_brokers_list_count with nodes dataframe and fill empty rows with 0 (for non-CB)
-    nodes_with_characteristics = nodes.merge(community_brokers_list_count, on="id", how="outer")
+    # Merge community_brokers_list_count with nodes dataframe and fill empty rows with 0 (for non-CB)
+    nodes_with_characteristics = nodes_with_characteristics_with_broker_binary.merge(community_brokers_list_count, on="id", how="outer")
     nodes_with_characteristics["n_community_broker"] = nodes_with_characteristics[
         "n_community_broker"
     ].fillna(0)
@@ -89,11 +93,9 @@ def detect_community_brokers(nodes, edges):
 
 def find_community_characteristics(nodes, edges):
     """This function computes community characteristics required for the community broker score calculation
-
     Parameters:
         - nodes : Dataframe with columns 'id' and 'community_id'.
         - edges : Dataframe with columns source 'A' and target 'B', undirected.
-
     Returns:
         - communities : Community dataframe with each row a community and with columns:
             - community_id: id of the community
@@ -101,10 +103,14 @@ def find_community_characteristics(nodes, edges):
             - community_n_people: integer number of people in the community.
             - community_n_brokers: integer number of community brokers in each community.
     """
+    #rename dataframe columns
+    edges_for_calculation = edges.rename(columns={f'{edges.columns[0]}':'A', f'{edges.columns[1]}':'B'})
+    nodes_for_calculation = nodes.rename(columns={f'{nodes.columns[0]}':'id', f'{nodes.columns[1]}':'community_id'})
+    
     nodes_with_characteristics = detect_community_brokers(nodes, edges)
     nodes_without_count_var = nodes_with_characteristics.drop(columns=["n_community_broker"])
 
-    #  Extract the number of commmunity brokers and people for each community based on nodes dataframe
+    # Extract the number of commmunity brokers and people for each community based on nodes dataframe
     group_nodes_per_community = (
         nodes_without_count_var.groupby("community_id")
         .agg({"id": "count", "community_broker": "sum"})
@@ -116,15 +122,15 @@ def find_community_characteristics(nodes, edges):
         group_nodes_per_community.community_n_people > 1
     ).all(), "Number of people in communities has to be larger than 1"
 
-    #  Create a graph object and set community_id as nodes attributes
-    graph = nx.from_pandas_edgelist(edges, source="A", target="B")
+    # Create a graph object and set community_id as nodes attributes
+    graph = nx.from_pandas_edgelist(edges_for_calculation, source="A", target="B")
     extra_community_id_as_attribute = pd.Series(
         nodes_with_characteristics.community_id.values,
         index=nodes_with_characteristics.id,
     ).to_dict()
     nx.set_node_attributes(graph, extra_community_id_as_attribute, "community_id")
 
-    #  Compute score for each community
+    # Compute score for each community
     cohesion_score = []
     for each_community_id in nodes_with_characteristics.community_id.unique():
         nodes_per_community = nodes_with_characteristics.loc[
@@ -138,7 +144,7 @@ def find_community_characteristics(nodes, edges):
         }
         cohesion_score.append(extract_info_cohesion_score_per_community)
 
-    #  Merge to have a dataframe with communities information
+    # Merge to have a dataframe with communities information
     communities = (
         pd.DataFrame(cohesion_score)
         .merge(group_nodes_per_community, on="community_id", how="outer")
@@ -151,25 +157,26 @@ def find_community_characteristics(nodes, edges):
 def local_community_broker_score(nodes, edges):
     """This function calculates the community broker score for one network partition
     (thus the local community broker score)
-
     Parameters:
         - nodes : Dataframe with columns 'id' and 'community_id'.
         - edges : Dataframe with columns source 'A' and target 'B', undirected.
-
     Returns:
         - nodes_with_broker_score : Node dataframe with local community broker score.
-
     Note that the local community broker score is the score for one community structure.
     When the community-detection algorithm chosen yields different partitioning every time it is computed,
     to find the global score one has to compute the average of local scores over multiple possible network partitionings.
-
     """
-    #  Recompute each prior functions
+    
+    # Rename dataframe columns
+    edges_for_calculation = edges.rename(columns={f'{edges.columns[0]}':'A', f'{edges.columns[1]}':'B'})
+    nodes_for_calculation = nodes.rename(columns={f'{nodes.columns[0]}':'id', f'{nodes.columns[1]}':'community_id'})
+    
+    # Recompute each prior functions
     edges_only_community_bridge = detect_brokering_edges(nodes, edges)
     nodes_with_characteristics = detect_community_brokers(nodes, edges)
     communities = find_community_characteristics(nodes, edges)
 
-    #  Create inverse dataframe --the goal is to get a dataframe with id, community_id_A, community_id_B for each node
+    # Create inverse dataframe --the goal is to get a dataframe with id, community_id_A, community_id_B for each node
     edges_only_community_bridge_inversed = edges_only_community_bridge.rename(
         columns={
             "A": "B",
@@ -179,7 +186,7 @@ def local_community_broker_score(nodes, edges):
         }
     )
 
-    #  Drop duplicates because sometimes one community broker bridges the same community many times
+    # Drop duplicates because sometimes one community broker bridges the same community many times
     all_broker_ties = pd.concat(
         [edges_only_community_bridge, edges_only_community_bridge_inversed]
     ).drop_duplicates()
@@ -187,7 +194,7 @@ def local_community_broker_score(nodes, edges):
         ["A", "community_id_A", "community_id_B", "community_broker"]
     ].rename(columns={"A": "id"}).drop_duplicates()
 
-    #  Detect cobridgers for based on community source (A) towards community target (B) for each broker tie
+    # Detect cobridgers for based on community source (A) towards community target (B) for each broker tie
     n_CB_A_towards_B = (
         all_broker_ties_unique_in_one_column.groupby(["community_id_A", "community_id_B"])
         .agg({"id": "count"})
@@ -195,17 +202,17 @@ def local_community_broker_score(nodes, edges):
         .reset_index()
     )
 
-    #  Merge with all_broker_ties_unique_in_one_column to get info alltogether
+    # Merge with all_broker_ties_unique_in_one_column to get info alltogether
     all_broker_ties_info = all_broker_ties_unique_in_one_column.merge(
         n_CB_A_towards_B, on=["community_id_A", "community_id_B"], how="outer"
     )
 
-    #  Since we will merge info from cohesion dataframe, keep only interesting columns from the dataframe
+    # Since we will merge info from cohesion dataframe, keep only interesting columns from the dataframe
     interesting_columns_communities = communities[
         ["community_id", "community_cohesion", "community_n_people"]
     ]
 
-    #  Create large dataframe with all info to calculate local community broker score for each briding tie created
+    # Create large dataframe with all info to calculate local community broker score for each briding tie created
     info_community_A = (
         all_broker_ties_info.merge(
             interesting_columns_communities,
@@ -237,7 +244,7 @@ def local_community_broker_score(nodes, edges):
         .drop("community_id", axis=1)
     )
 
-    #  Calculate Score for community targeted (CB)
+    # Calculate Score for community targeted (CB)
     info_community_AB_with_score_CB = info_community_AB.assign(
         score_CB=info_community_AB.community_n_people_CB
         / (info_community_AB.community_cohesion_CB * np.sqrt(info_community_AB.n_cobrokers))
@@ -251,20 +258,20 @@ def local_community_broker_score(nodes, edges):
         }
     )
 
-    #  Calculate score for boker's own community
+    # Calculate score for boker's own community
     info_community_AB_with_scores_CB_CA = info_community_AB_with_scores_CB_summed.assign(
         score_CA=info_community_AB_with_scores_CB_summed.community_n_people_CA
         / info_community_AB_with_scores_CB_summed.community_cohesion_CA
     )
 
-    #  Calculate final score
+    # Calculate final score
     final_scores = info_community_AB_with_scores_CB_CA.assign(
         community_broker_score=(
             info_community_AB_with_scores_CB_CA.score_CB + info_community_AB_with_scores_CB_CA.score_CA
         )
     ).reset_index(drop=True)
 
-    #  Merge final score with nodes dataframe
+    # Merge final score with nodes dataframe
     final_scores_relevant_columns_for_merge = final_scores[["id", "community_broker_score"]]
     nodes_with_broker_score = nodes_with_characteristics.merge(
         final_scores_relevant_columns_for_merge, on="id", how="left"
