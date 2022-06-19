@@ -34,7 +34,7 @@ Install Package
   ```
   from community_broker_score import community_broker_score as cb 
   ```
-  Needed Python libraries:
+  Needed Python libraries (library dependencies):
   ```
   pandas as pd
   numpy as np
@@ -64,6 +64,8 @@ Install Package
   cb.detect_community_brokers(nodes, edges)
   ```
 
+## Example
+See Jupyter Notebook for an example
 
 ## Testing
 Using pytest
