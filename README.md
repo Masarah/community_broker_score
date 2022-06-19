@@ -65,7 +65,7 @@ Install Package
   ```
 
 ## Example
-See Jupyter Notebook for an example
+A Jupyter Notebook is provided with an example in a repository. 
 
 ## Testing
 Using pytest
